@@ -1,0 +1,34 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: https-redirect
+  namespace: it
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: it-tools
+  namespace: it
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: it-https-redirect@kubernetescrd
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  
+spec:
+  tls:
+  - hosts:
+    - it.herbd.fun
+    secretName: it-tools-tls
+  rules:
+  - host: it.herbd.fun
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: it-tools
+            port:
+              number: 80 
